@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Service Dashboard</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="shell">
+    <section class="hero">
+        <div>
+            <h1 class="eyebrow">Finance microservice dashboard</h1>
+            <p class="hero-copy">
+                Every API operation is exposed here: create, inspect, update, pay, cancel, delete, and refresh.
+            </p>
+        </div>
+        <div class="hero-actions">
+            <button id="refreshAllBtn" class="primary">Refresh data</button>
+        </div>
+    </section>
+
+    <section class="stats-grid" id="statsGrid">
+        <article class="stat-card">
+            <span>Total accounts</span>
+            <strong id="totalAccounts">0</strong>
+        </article>
+        <article class="stat-card">
+            <span>Total invoices</span>
+            <strong id="totalInvoices">0</strong>
+        </article>
+        <article class="stat-card">
+            <span>Outstanding balance</span>
+            <strong id="outstandingBalance">GBP 0.00</strong>
+        </article>
+        <article class="stat-card">
+            <span>Unpaid invoices</span>
+            <strong id="unpaidInvoices">0</strong>
+        </article>
+    </section>
+
+    <section class="content-grid">
+        <div class="column-stack">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Account operations</h2>
+                <button id="refreshAccountsBtn" class="ghost small">Reload accounts</button>
+            </div>
+            <form id="createAccountForm" class="stack-form">
+                <label>
+                    <span>Create account for student ID</span>
+                    <input name="studentId" type="number" min="1" placeholder="1001" required>
+                </label>
+                <label>
+                    <span>Date created</span>
+                    <input name="dateCreated" type="date">
+                </label>
+                <button class="primary" type="submit">Create account</button>
+            </form>
+
+            <form id="lookupAccountForm" class="inline-form">
+                <label>
+                    <span>Fetch account by student ID</span>
+                    <input name="studentId" type="number" min="1" placeholder="1001" required>
+                </label>
+                <button class="secondary" type="submit">Find account</button>
+            </form>
+
+            <form id="deleteAccountForm" class="inline-form danger-zone">
+                <label>
+                    <span>Delete account by student ID</span>
+                    <input name="studentId" type="number" min="1" placeholder="1001" required>
+                </label>
+                <button class="danger" type="submit">Delete account</button>
+            </form>
+
+            <div id="accountLookupResult" class="detail-card empty">No account selected.</div>
+
+            <div class="table-wrap account-table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Account ID</th>
+                        <th>Student ID</th>
+                        <th>Balance</th>
+                        <th>Date created</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="accountsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <section class="panel activity-panel">
+            <div class="panel-header">
+                <h2>Activity and responses</h2>
+                <button id="clearActivityBtn" class="ghost small">Clear log</button>
+            </div>
+            <div id="statusBanner" class="status-banner">Ready.</div>
+            <div id="activityLog" class="activity-log"></div>
+        </section>
+        </div>
+
+        <div class="panel invoice-panel">
+            <div class="panel-header">
+                <h2>Invoice operations</h2>
+                <button id="refreshInvoicesBtn" class="ghost small">Reload invoices</button>
+            </div>
+
+            <form id="createInvoiceForm" class="stack-form">
+                <label>
+                    <span>Student ID</span>
+                    <input name="studentId" type="number" min="1" placeholder="1001" required>
+                </label>
+                <label>
+                    <span>Description</span>
+                    <input name="description" type="text" maxlength="255" placeholder="Tuition fee" required>
+                </label>
+                <label>
+                    <span>Amount</span>
+                    <input name="amount" type="number" min="0" step="0.01" placeholder="1500.00" required>
+                </label>
+                <label>
+                    <span>Date created</span>
+                    <input name="dateCreated" type="date">
+                </label>
+                <button class="primary" type="submit">Create invoice</button>
+            </form>
+
+            <form id="updateInvoiceForm" class="stack-form tinted">
+                <label>
+                    <span>Invoice ID</span>
+                    <input name="invoiceId" type="number" min="1" placeholder="1" required>
+                </label>
+                <label>
+                    <span>New description</span>
+                    <input name="description" type="text" maxlength="255" placeholder="Optional">
+                </label>
+                <label>
+                    <span>New amount</span>
+                    <input name="amount" type="number" min="0" step="0.01" placeholder="Optional">
+                </label>
+                <button class="secondary" type="submit">Update invoice</button>
+            </form>
+
+            <form id="invoiceActionForm" class="inline-form">
+                <label>
+                    <span>Invoice ID</span>
+                    <input name="invoiceId" type="number" min="1" placeholder="1" required>
+                </label>
+                <button type="button" data-action="fetch" class="ghost">Fetch</button>
+                <button type="button" data-action="pay" class="primary">Pay</button>
+                <button type="button" data-action="cancel" class="secondary">Cancel</button>
+                <button type="button" data-action="delete" class="danger">Delete</button>
+            </form>
+
+            <div id="invoiceLookupResult" class="detail-card empty">No invoice selected.</div>
+
+            <div class="table-wrap invoice-table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Student ID</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Date created</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="invoicesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="/app.js" defer></script>
+</body>
+</html>
