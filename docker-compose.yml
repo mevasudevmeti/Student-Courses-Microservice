@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: finance-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Sagarmatha8848@
+      MYSQL_DATABASE: finance_db
+    command: --port=3307
+    ports:
+      - "3307:3307"
+    volumes:
+      - finance_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-P", "3307", "-pSagarmatha8848@"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  finance-service:
+    build: .
+    container_name: finance-service
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3307/finance_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Sagarmatha8848@
+    ports:
+      - "8082:8082"
+
+volumes:
+  finance_mysql_data:
