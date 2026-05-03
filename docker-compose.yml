@@ -1,0 +1,21 @@
+
+services:
+  leedsdb:
+    image: mysql:8.0
+    container_name: leedsdb_container
+    environment:
+      MYSQL_ROOT_PASSWORD: Dribbler@99
+      MYSQL_DATABASE: library_db3
+    ports:
+      - "3308:3306"
+    volumes:
+      - leedsdb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pDribbler@99"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  leedsdb_data:
