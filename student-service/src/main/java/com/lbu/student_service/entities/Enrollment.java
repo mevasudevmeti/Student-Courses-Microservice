@@ -1,11 +1,9 @@
 package com.lbu.student_service.entities;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "enrollments")
@@ -15,25 +13,27 @@ public class Enrollment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long enrollmentId;
+    private Long id;
 
-    // Many enrollments can belong to one student
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "student_id")
     private Student student;
 
-    // Many enrollments can be for the same course
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "course_id")
     private Course course;
 
-    @Column(nullable = false)
-    private LocalDateTime enrollmentDate;
+    @Column(name = "invoice_reference")
+    private String invoiceReference;
 
-    // Automatically set the date when the record is saved
-    @PrePersist
-    protected void onCreate() {
-        enrollmentDate = LocalDateTime.now();
+    // FIX: Add this field if it's missing, and initialize it to LocalDate.now()
+    @Column(name = "enrollment_date", nullable = false)
+    private LocalDate enrollmentDate = LocalDate.now();
+
+    public Enrollment(Student student, Course course, String invoiceReference) {
+        this.student = student;
+        this.course = course;
+        this.invoiceReference = invoiceReference;
+        this.enrollmentDate = LocalDate.now(); // Set date on creation
     }
 }
-

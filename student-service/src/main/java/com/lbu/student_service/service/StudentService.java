@@ -1,7 +1,7 @@
 package com.lbu.student_service.service;
 
 import com.lbu.student_service.clients.FinanceClient;
-import com.lbu.student_service.clients.LibraryClient; // Make sure to create this client
+import com.lbu.student_service.clients.LibraryClient;
 import com.lbu.student_service.dto.*;
 import com.lbu.student_service.entities.*;
 import com.lbu.student_service.exception.StudentNotFoundException;
@@ -26,7 +26,6 @@ public class StudentService {
     private final LibraryClient libraryClient;
     private final PasswordEncoder passwordEncoder;
 
-    // Use Constructor Injection for all dependencies (Markers prefer this over @Autowired)
     public StudentService(StudentRepository studentRepository,
                           UserRepository userRepository,
                           CourseRepository courseRepository,
@@ -43,127 +42,136 @@ public class StudentService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 1. Requirement: "View all the courses offered"
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
     }
 
-    // 2. Requirement: "Enrol in course" + "First enrolment account creation"
+    public Student login(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+            return studentRepository.findByUser(user);
+        }
+        return null;
+    }
+
+    /**
+     * Requirement: "Enrol in course" + "First enrolment account creation"
+     * This method handles the logic of checking services and generating a real invoice ref.
+     */
     @Transactional
-    public Enrollment enrolInCourse(Long studentId, Long courseId) {
+    public Map<String, Object> enrolInCourse(Long studentId, Long courseId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new StudentNotFoundException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found"));
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         AccountDto externalAccount = new AccountDto();
         externalAccount.setStudentId(student.getStudentId().toString());
 
-        // 1. Handle Finance Account Creation
+        // 1. Ensure accounts exist in Finance and Library
         try {
             financeClient.createAccount(externalAccount);
         } catch (Exception e) {
-            // If Finance says 422 (Already exists), we just log it and move on
-            System.out.println("Finance account already exists for ID: " + studentId + ". Skipping creation.");
+            System.out.println("Finance account exists or skipped: " + e.getMessage());
         }
 
-        // 2. Handle Library Account Creation (The Mocked/Fixed call)
         try {
-            libraryClient.createAccount(externalAccount);
+            libraryClient.createLibraryAccount(externalAccount);
         } catch (Exception e) {
-            // This prevents the Library 404 from crashing your whole enrolment process
-            System.out.println("Library service unavailable or account exists. Skipping.");
+            System.out.println("Library account skipped: " + e.getMessage());
         }
 
-        // 3. Save local enrollment
+        // 2. Create the Invoice in Finance Service and get the 8-char Reference
+        String invoiceReference = "PENDING";
+        try {
+            InvoiceDto invoiceRequest = new InvoiceDto();
+            invoiceRequest.setStudentId(student.getStudentId().toString());
+            invoiceRequest.setAmount(course.getPrice());
+            invoiceRequest.setDueDate(LocalDate.now().plusDays(30));
+
+            // This now returns the InvoiceDto with the reference
+            InvoiceDto response = financeClient.createInvoice(invoiceRequest);
+            if (response != null && response.getReference() != null) {
+                invoiceReference = response.getReference();
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to generate Finance invoice: " + e.getMessage());
+        }
+
+        // 3. Save local enrollment linked to the invoice reference
         Enrollment enrollment = new Enrollment();
         enrollment.setStudent(student);
         enrollment.setCourse(course);
+        enrollment.setInvoiceReference(invoiceReference);
         Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
 
-        // 4. Requirement: Send invoice to Finance (This creates the actual bill)
-        try {
-            createEnrollmentInvoice(student, course.getPrice());
-        } catch (Exception e) {
-            System.err.println("Failed to create Finance invoice: " + e.getMessage());
-        }
+        // 4. Return Data for React UI Alert
+        Map<String, Object> result = new HashMap<>();
+        result.put("enrollmentId", savedEnrollment.getId());
+        result.put("courseTitle", course.getTitle());
+        result.put("invoiceReference", invoiceReference);
+        result.put("amount", course.getPrice());
+        result.put("status", "SUCCESS");
 
-        return savedEnrollment;
+        return result;
     }
 
-    // 3. Requirement: "Register/Log in"
     public Student register(Student student) {
         if (student.getUser().getRole() == null) {
             student.getUser().setRole("STUDENT");
         }
         student.getUser().setPassword(passwordEncoder.encode(student.getUser().getPassword()));
+
         User savedUser = userRepository.save(student.getUser());
         student.setUser(savedUser);
+        Student savedStudent = studentRepository.save(student);
+
+        String sid = savedStudent.getStudentId().toString();
+        AccountDto accountDto = new AccountDto();
+        accountDto.setStudentId(sid);
+
+        try {
+            financeClient.createAccount(accountDto);
+        } catch (Exception e) {
+            System.err.println("Finance account creation failed: " + e.getMessage());
+        }
+
+        try {
+            libraryClient.createLibraryAccount(accountDto);
+        } catch (Exception e) {
+            System.err.println("Library account creation failed: " + e.getMessage());
+        }
+
+        return savedStudent;
+    }
+
+    public boolean isEligibleToGraduate(String studentId) {
+        try {
+            AccountDto account = financeClient.getAccountByStudentId(studentId);
+            if (account == null) return false;
+
+            // If they have an outstanding balance, they cannot graduate
+            return !account.isHasOutstandingBalance();
+        } catch (Exception e) {
+            System.err.println("Finance Service Error: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Student updateStudent(Long id, Map<String, String> updates) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (updates.containsKey("firstName")) student.setFirstName(updates.get("firstName"));
+        if (updates.containsKey("lastName")) student.setLastName(updates.get("lastName"));
+
         return studentRepository.save(student);
     }
 
-    // 4. Requirement: "Graduation - view eligibility"
-    public boolean isEligibleToGraduate(String studentId) {
-        try {
-            // Fetch the account from Finance Service
-            AccountDto account = financeClient.getAccountByStudentId(studentId);
-
-            if (account == null) {
-                System.out.println("No account found in Finance for student: " + studentId);
-                return false;
-            }
-
-            // DEBUG: Check what value is actually coming back
-            System.out.println("DEBUG: Finance Service reports hasOutstandingBalance = "
-                    + account.isHasOutstandingBalance() + " for student " + studentId);
-
-            // LOGIC FIX:
-            // If they HAVE an outstanding balance (true), they are NOT eligible (false)
-            if (account.isHasOutstandingBalance()) {
-                return false; // Stop graduation
-            } else {
-                return true;  // Allow graduation
-            }
-
-        } catch (Exception e) {
-            System.err.println("Finance Service Error: " + e.getMessage());
-            return false; // Default to 'not eligible' if service is down
-        }
+    public List<Enrollment> getStudentEnrolments(Long id) {
+        return enrollmentRepository.findByStudentId(id);
     }
 
-    public void createEnrollmentInvoice(Student student, Double coursePrice) {
-        String sid = student.getStudentId().toString();
-
-        // 1. Construct the nested Account object for the invoice
-        // The Finance Invoice model likely has: private Account account;
-        Map<String, Object> accountRef = new HashMap<>();
-        accountRef.put("studentId", sid);
-
-        // 2. Build the main Invoice Map
-        Map<String, Object> invoiceMap = new HashMap<>();
-        invoiceMap.put("amount", coursePrice);
-        invoiceMap.put("dueDate", LocalDate.now().plusDays(30).toString());
-        invoiceMap.put("type", "TUITION_FEES");
-        invoiceMap.put("status", "OUTSTANDING");
-
-        // CHANGE: Pass the account as an object, not a string
-        // If the model uses the field name 'account', we use that:
-        invoiceMap.put("account", accountRef);
-
-        // Safety: Some versions use 'studentId' at the top level, keep it too
-        invoiceMap.put("studentId", sid);
-
-        try {
-            System.out.println("Sending nested Invoice for Student: " + sid);
-            financeClient.createInvoice(invoiceMap);
-            System.out.println("SUCCESS: Invoice created and linked to account.");
-        } catch (Exception e) {
-            // If 'account' doesn't work, try renaming the key to 'student'
-            System.err.println("Finance error: " + e.getMessage());
-        }
-    }
-
-    // Standard CRUD methods
     public Student getStudentById(Long id) {
         return studentRepository.findById(id).orElseThrow(() -> new StudentNotFoundException("Not found"));
     }

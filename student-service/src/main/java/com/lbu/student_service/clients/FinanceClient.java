@@ -14,7 +14,7 @@ public interface FinanceClient {
     void createAccount(@RequestBody AccountDto accountData);
 
     @PostMapping("/invoices")
-    void createInvoice(@RequestBody Map<String, Object> invoiceData);
+    InvoiceDto createInvoice(@RequestBody InvoiceDto invoiceData);
 
     /**
      * Fetches the account details including the 'hasOutstandingBalance' flag.

@@ -1,6 +1,7 @@
 package com.lbu.student_service.controller;
 
 import com.lbu.student_service.clients.FinanceClient;
+import com.lbu.student_service.dto.InvoiceDto;
 import com.lbu.student_service.entities.Enrollment;
 import com.lbu.student_service.entities.Student;
 import com.lbu.student_service.entities.Course;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/students")
+@CrossOrigin(origins = "http://localhost:3000")
 public class StudentController {
 
     private final StudentService studentService;
@@ -28,6 +30,20 @@ public class StudentController {
         return ResponseEntity.ok(studentService.register(student));
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+        String username = credentials.get("username");
+        String password = credentials.get("password");
+
+        Student student = studentService.login(username, password);
+
+        if (student != null) {
+            return ResponseEntity.ok(student);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+    }
+
     // 2. VIEW COURSES: Requirement "View all the courses offered"
     @GetMapping("/courses")
     public ResponseEntity<List<Course>> getAllCourses() {
@@ -37,7 +53,7 @@ public class StudentController {
     // 3. ENROL: Requirement "Enrol in course"
     // Expects JSON like: {"studentId": 1, "courseId": 101}
     @PostMapping("/enrol")
-    public ResponseEntity<Enrollment> enrol(@RequestParam Long studentId, @RequestParam Long courseId) {
+    public ResponseEntity<Map<String, Object>> enrol(@RequestParam Long studentId, @RequestParam Long courseId) {
         return ResponseEntity.ok(studentService.enrolInCourse(studentId, courseId));
     }
 
@@ -56,6 +72,18 @@ public class StudentController {
     @GetMapping("/{id}")
     public ResponseEntity<Student> getProfile(@PathVariable Long id) {
         return ResponseEntity.ok(studentService.getStudentById(id));
+    }
+
+//     6. UPDATE PROFILE: Requirement "update name and surname"
+    @PatchMapping("/{id}")
+    public ResponseEntity<Student> updateProfile(@PathVariable Long id, @RequestBody Map<String, String> updates) {
+        return ResponseEntity.ok(studentService.updateStudent(id, updates));
+    }
+
+    // 7. VIEW ENROLMENTS: Requirement "View courses enrolled in"
+    @GetMapping("/{id}/enrolments")
+    public ResponseEntity<List<Enrollment>> getMyEnrolments(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getStudentEnrolments(id));
     }
 
     @PostMapping("/mock-library/accounts")
