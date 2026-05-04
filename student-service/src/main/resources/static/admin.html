@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Admin Portal | Home</title><link rel="stylesheet" href="styles.css" /></head>
+<body>
+<header id="appHeader" class="app-header"></header>
+<section class="page-hero"><p class="eyebrow">Admin</p><h1>Admin Dashboard</h1><p class="subtitle">Use the admin user to add courses, check students, review profiles and inspect all enrolments.</p></section>
+<main class="dashboard-grid">
+    <section class="card"><h2>Overview</h2><div class="card-grid"><div class="stat"><strong id="studentCount">0</strong><span>Students</span></div><div class="stat"><strong id="courseCount">0</strong><span>Courses</span></div><div class="stat"><strong id="enrolmentCount">0</strong><span>Enrolments</span></div></div><div id="statusBanner" class="status">Loading admin dashboard...</div></section>
+    <section class="card"><h2>Admin actions</h2><p class="muted">Default admin credentials are username <strong>admin</strong> and password <strong>admin</strong>.</p><div class="inline-actions"><a class="button primary" href="admin-courses.html">Manage courses</a><a class="button ghost" href="admin-students.html">View students</a><a class="button ghost" href="admin-enrolments.html">View enrolments</a></div></section>
+</main>
+<script src="portal.js"></script><script src="admin.js"></script>
+</body></html>

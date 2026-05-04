@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Admin Portal | Students</title><link rel="stylesheet" href="styles.css" /></head>
+<body>
+<header id="appHeader" class="app-header"></header>
+<section class="page-hero"><p class="eyebrow">Admin</p><h1>Students & Profiles</h1><p class="subtitle">View all student details, edit profile fields, and review each student’s enrolments.</p></section>
+<main class="content">
+    <div id="statusBanner" class="status">Loading students...</div>
+    <section class="card"><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Username</th><th>Enrolments</th><th>Edit</th></tr></thead><tbody id="studentsTable"><tr><td colspan="6">Loading...</td></tr></tbody></table></div></section>
+    <section class="card"><h2>Edit selected student</h2><form id="studentEditForm"><input name="studentId" type="hidden" /><div class="two-col"><label>First name <input name="firstName" required /></label><label>Last name <input name="lastName" required /></label></div><label>Email <input name="email" type="email" required /></label><button class="primary" type="submit">Save student profile</button></form><div id="studentEnrolmentPanel" class="result muted">Select a student to view their enrolments.</div></section>
+</main>
+<script src="portal.js"></script><script src="admin-students.js"></script>
+</body></html>

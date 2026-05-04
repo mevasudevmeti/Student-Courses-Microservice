@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Student Portal | Graduation Check</title><link rel="stylesheet" href="styles.css" /></head>
+<body>
+<header id="appHeader" class="app-header"></header>
+<section class="page-hero"><p class="eyebrow">Graduation</p><h1>Graduation Eligibility Check</h1><p class="subtitle">The portal asks the Finance service whether your student account has outstanding invoices.</p></section>
+<main class="dashboard-grid">
+    <section class="card"><h2>Check eligibility</h2><p class="muted">Requirement: student can graduate only when there are no outstanding invoices.</p><button id="checkBtn" class="primary" type="button">Run graduation check</button><div id="statusBanner" class="status">Ready.</div></section>
+    <section class="card"><h2>Result</h2><div id="graduationResult" class="result muted">No check has been run yet.</div></section>
+</main>
+<script src="portal.js"></script><script src="graduation.js"></script>
+</body></html>
