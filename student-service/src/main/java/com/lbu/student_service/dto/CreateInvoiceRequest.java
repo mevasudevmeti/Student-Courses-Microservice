@@ -5,14 +5,12 @@ import lombok.Data;
 import java.time.LocalDate;
 
 /**
- * DTO used to receive invoice references from the Finance microservice.
+ * Request DTO sent to the Finance microservice when enrolment or library fine invoices are created.
  */
 @Data
-public class InvoiceDto {
-    private Long id;
+public class CreateInvoiceRequest {
     private Long studentId;
     private String description;
     private Double amount;
-    private String status;
     private LocalDate dateCreated;
 }

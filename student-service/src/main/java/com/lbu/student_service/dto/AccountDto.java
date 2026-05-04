@@ -1,30 +1,20 @@
 package com.lbu.student_service.dto;
 
 import lombok.Data;
-import java.util.List;
 
+import java.time.LocalDate;
+
+/**
+ * DTO used to receive Finance account data without exposing or depending on Finance entity classes.
+ */
 @Data
 public class AccountDto {
-    private String studentId;
+    private Long id;
+    private Long studentId;
+    private Double balance;
+    private LocalDate dateCreated;
 
-    // Ensure this exact name is used
-    private boolean hasOutstandingBalance;
-
-    // Standard getters/setters
-    // Note: for booleans, the getter is usually 'is...'
-    public boolean isHasOutstandingBalance() {
-        return hasOutstandingBalance;
-    }
-
-    public void setHasOutstandingBalance(boolean hasOutstandingBalance) {
-        this.hasOutstandingBalance = hasOutstandingBalance;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
+    public boolean hasOutstandingBalance() {
+        return balance != null && balance > 0;
     }
 }
