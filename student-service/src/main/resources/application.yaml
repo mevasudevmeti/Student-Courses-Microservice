@@ -3,17 +3,18 @@ server:
 
 services:
   finance:
-    url: http://localhost:8081
+    url: http://localhost:8082
   library:
-    url: http://localhost:8082/api/v1/mock-library # Port for CESBooks-master
+    url: http://localhost:8085
 
 spring:
+  application:
+    name: student-service
   datasource:
-    url: jdbc:mysql://localhost:3306/student_portal?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/student_portal?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: Deadlyalive1@
+    password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,6 +22,4 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-  application:
-    name: student-service
+        dialect: org.hibernate.dialect.MySQLDialect
