@@ -1,21 +1,36 @@
 package com.lbu.student_service.controller;
 
-import com.lbu.student_service.clients.FinanceClient;
+import com.lbu.student_service.dto.AuthResponse;
 import com.lbu.student_service.dto.InvoiceDto;
+import com.lbu.student_service.entities.Course;
 import com.lbu.student_service.entities.Enrollment;
 import com.lbu.student_service.entities.Student;
-import com.lbu.student_service.entities.Course;
 import com.lbu.student_service.service.StudentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This controller exposes the Student portal REST API for registration, login, courses,
+ * enrolments, profile updates and graduation checks.
+ *
+ * The controller receives StudentService through constructor injection and delegates business rules
+ * to the service layer.
+ */
 @RestController
 @RequestMapping("/api/v1/students")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8083"})
 public class StudentController {
 
     private final StudentService studentService;
@@ -24,75 +39,68 @@ public class StudentController {
         this.studentService = studentService;
     }
 
-    // 1. REGISTER: Creates user, student, and external accounts
     @PostMapping("/register")
     public ResponseEntity<Student> register(@RequestBody Student student) {
-        return ResponseEntity.ok(studentService.register(student));
+        return ResponseEntity.status(HttpStatus.CREATED).body(studentService.register(student));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
-
-        Student student = studentService.login(username, password);
-
-        if (student != null) {
-            return ResponseEntity.ok(student);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        AuthResponse auth = studentService.login(credentials.get("username"), credentials.get("password"));
+        if (auth == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid credentials"));
         }
+        return ResponseEntity.ok(auth);
     }
 
-    // 2. VIEW COURSES: Requirement "View all the courses offered"
     @GetMapping("/courses")
     public ResponseEntity<List<Course>> getAllCourses() {
         return ResponseEntity.ok(studentService.getAllCourses());
     }
 
-    // 3. ENROL: Requirement "Enrol in course"
-    // Expects JSON like: {"studentId": 1, "courseId": 101}
     @PostMapping("/enrol")
     public ResponseEntity<Map<String, Object>> enrol(@RequestParam Long studentId, @RequestParam Long courseId) {
-        return ResponseEntity.ok(studentService.enrolInCourse(studentId, courseId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(studentService.enrolInCourse(studentId, courseId));
     }
 
-    // 4. GRADUATION: Requirement "view eligibility to graduate"
     @GetMapping("/{studentId}/graduation-eligibility")
-    public ResponseEntity<String> checkGraduation(@PathVariable String studentId) {
-        boolean isEligible = studentService.isEligibleToGraduate(studentId);
-        if (isEligible) {
-            return ResponseEntity.ok("Eligible to Graduate: All invoices paid.");
-        } else {
-            return ResponseEntity.status(403).body("Not Eligible: Outstanding invoices found in Finance Service.");
-        }
+    public ResponseEntity<Map<String, Object>> checkGraduation(@PathVariable Long studentId) {
+        boolean eligible = studentService.isEligibleToGraduate(studentId);
+        return ResponseEntity.ok(Map.of(
+                "studentId", studentId,
+                "eligible", eligible,
+                "message", eligible
+                        ? "Eligible to graduate: no outstanding invoices found."
+                        : "Not eligible to graduate: outstanding balance exists or Finance service is unavailable."
+        ));
     }
 
-    // 5. VIEW PROFILE: Requirement "view profile (includes student ID)"
-    @GetMapping("/{id}")
-    public ResponseEntity<Student> getProfile(@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.getStudentById(id));
+    @GetMapping("/{studentId}")
+    public ResponseEntity<Student> getProfile(@PathVariable Long studentId) {
+        return ResponseEntity.ok(studentService.getStudentById(studentId));
     }
 
-//     6. UPDATE PROFILE: Requirement "update name and surname"
-    @PatchMapping("/{id}")
-    public ResponseEntity<Student> updateProfile(@PathVariable Long id, @RequestBody Map<String, String> updates) {
-        return ResponseEntity.ok(studentService.updateStudent(id, updates));
+    @PatchMapping("/{studentId}")
+    public ResponseEntity<Student> updateProfile(@PathVariable Long studentId,
+                                                 @RequestBody Map<String, String> updates) {
+        return ResponseEntity.ok(studentService.updateStudent(studentId, updates));
     }
 
-    // 7. VIEW ENROLMENTS: Requirement "View courses enrolled in"
-    @GetMapping("/{id}/enrolments")
-    public ResponseEntity<List<Enrollment>> getMyEnrolments(@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.getStudentEnrolments(id));
+    @GetMapping("/{studentId}/enrolments")
+    public ResponseEntity<List<Enrollment>> getMyEnrolments(@PathVariable Long studentId) {
+        return ResponseEntity.ok(studentService.getStudentEnrolments(studentId));
     }
 
-    @PostMapping("/mock-library/accounts")
-    public ResponseEntity<String> mockLibraryAccount(@RequestBody Object dummy) {
-        return ResponseEntity.ok("Mock Library Account Created");
+    @PostMapping("/{studentId}/library-fine")
+    public ResponseEntity<InvoiceDto> createLibraryFine(@PathVariable Long studentId,
+                                                        @RequestParam Double amount,
+                                                        @RequestParam(required = false) String description) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(studentService.createLibraryFineInvoice(studentId, amount, description));
     }
 
-    @PostMapping("/mock-library/invoices")
-    public ResponseEntity<String> mockLibraryInvoice(@RequestBody Object dummy) {
-        return ResponseEntity.ok("Mock Library Invoice Created");
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of("status", "UP", "service", "student-service"));
     }
 }
