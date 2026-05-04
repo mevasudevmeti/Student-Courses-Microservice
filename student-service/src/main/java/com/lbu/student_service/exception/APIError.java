@@ -5,18 +5,12 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
+/**
+ * Standard error response returned by the REST API when validation, lookup or integration errors occur.
+ */
 @Data
 public class APIError {
-    private LocalDateTime timestamp;
-    private String errorMessage;
-    private HttpStatus statusCode;
-
-//    public APIError() {
-//        this.timestamp = LocalDateTime.now();
-//    }
-    public APIError(LocalDateTime timestamp, String error, HttpStatus statusCode) {
-        this.timestamp = timestamp;
-        this.errorMessage = error;
-        this.statusCode = statusCode;
-    }
+    private final LocalDateTime timestamp;
+    private final String errorMessage;
+    private final HttpStatus statusCode;
 }

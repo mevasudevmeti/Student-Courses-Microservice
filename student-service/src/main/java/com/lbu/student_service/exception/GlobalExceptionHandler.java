@@ -7,18 +7,40 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 
+/**
+
+ * Centralised exception handling converts Java exceptions into consistent HTTP responses.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(StudentNotFoundException.class)
     public ResponseEntity<APIError> handleStudentNotFoundException(StudentNotFoundException ex) {
-       // return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-
-              APIError apiError = new APIError(
-                        LocalDateTime.now(),
-                        ex.getMessage(),
-                        HttpStatus.NOT_FOUND);
-              return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<APIError> handleIllegalStateException(IllegalStateException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<APIError> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExternalServiceException.class)
+    public ResponseEntity<APIError> handleExternalServiceException(ExternalServiceException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<APIError> handleGenericException(Exception ex) {
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    private ResponseEntity<APIError> build(HttpStatus status, String message) {
+        APIError apiError = new APIError(LocalDateTime.now(), message, status);
+        return ResponseEntity.status(status).body(apiError);
+    }
 }
