@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Portal | Login</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<main class="auth-page">
+    <section class="auth-hero">
+        <div>
+            <p class="eyebrow">Software Engineering for Service Computing</p>
+            <h1>Online Courses Student Portal</h1>
+            <p class="subtitle">Register, log in, browse available courses, enrol, manage your profile and check graduation eligibility from one microservice-based portal.</p>
+        </div>
+        <div class="hero-card-row">
+            <div class="hero-mini-card"><strong>01</strong><span>Create student and linked Finance/Library accounts</span></div>
+            <div class="hero-mini-card"><strong>02</strong><span>Enrol in courses and generate invoices</span></div>
+            <div class="hero-mini-card"><strong>03</strong><span>Check graduation against outstanding invoices</span></div>
+        </div>
+    </section>
+
+    <section class="auth-panel">
+        <div class="auth-card">
+            <div class="tabs">
+                <button class="tab-btn active" type="button" data-tab="loginForm">Login</button>
+                <button class="tab-btn" type="button" data-tab="registerForm">Register</button>
+            </div>
+            <form id="loginForm" class="auth-form active">
+                <h2>Welcome back</h2>
+                <label>Username <input name="username" autocomplete="username" required /></label>
+                <label>Password <input name="password" type="password" autocomplete="current-password" required /></label>
+                <button class="primary" type="submit">Log in</button>
+            </form>
+            <form id="registerForm" class="auth-form">
+                <h2>Create account</h2>
+                <div class="two-col">
+                    <label>First name <input name="firstName" required /></label>
+                    <label>Last name <input name="lastName" required /></label>
+                </div>
+                <label>Email <input name="email" type="email" required /></label>
+                <div class="two-col">
+                    <label>Username <input name="username" autocomplete="username" required /></label>
+                    <label>Password <input name="password" type="password" autocomplete="new-password" required /></label>
+                </div>
+                <button class="primary" type="submit">Register and continue</button>
+            </form>
+            <div id="statusBanner" class="status">Please log in or register to continue.</div>
+        </div>
+    </section>
+</main>
+<script src="portal.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>

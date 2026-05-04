@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Student Portal | Home</title><link rel="stylesheet" href="styles.css" /></head>
+<body>
+<header id="appHeader" class="app-header"></header>
+<section class="page-hero"><p class="eyebrow">Dashboard</p><h1>Hello, <span id="welcomeName">Student</span></h1><p class="subtitle">Use the navigation to browse courses first. After your first enrolment, the portal unlocks My Enrolments, Profile Edit and Graduation Check.</p></section>
+<main class="dashboard-grid">
+    <section class="card">
+        <h2>Portal summary</h2>
+        <div class="card-grid">
+            <div class="stat"><strong id="studentIdStat">—</strong><span>Student ID</span></div>
+            <div class="stat"><strong id="courseCountStat">0</strong><span>Courses</span></div>
+            <div class="stat"><strong id="enrolmentCountStat">0</strong><span>Enrolments</span></div>
+        </div>
+        <div id="statusBanner" class="status">Loading dashboard...</div>
+    </section>
+    <section class="card">
+        <h2>Recommended journey</h2>
+        <div class="inline-actions">
+            <a class="button primary" href="courses.html">View courses</a>
+            <a class="button ghost locked-action" href="enrolments.html">My enrolments</a>
+            <a class="button ghost locked-action" href="graduation.html">Graduation check</a>
+        </div>
+        <p id="lockedNotice" class="notice">Enrol in at least one course to unlock enrolments, profile editing and graduation check.</p>
+    </section>
+</main>
+<script src="portal.js"></script><script src="home.js"></script>
+</body></html>
